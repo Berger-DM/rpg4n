@@ -1,6 +1,0 @@
-# to ignore the .env file
-.env
-# to ignore the .csv file generated in tests
-*.csv
-# to ignore JetBrains stuff
-/.idea
