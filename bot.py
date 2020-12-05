@@ -1,10 +1,12 @@
-import asyncio
-import ssl
 import os
+import ssl
+import csv
+import asyncio
 import asyncpg
 import discord
-from discord.ext import commands
 from discord.utils import get
+from discord.ext import commands
+from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 
 intents = discord.Intents.all()
@@ -45,6 +47,46 @@ async def init_base_roles(ctx):
 async def org_role(ctx, member: discord.Member):
     role = get(ctx.guild.roles, name="Organização")
     await member.add_roles(role)
+
+
+# NEXT LEVEL COMMANDS - USE THOSE ABOVE THEM
+@client.command()
+@commands.has_permissions(manage_channels=True)
+async def grab_games(ctx):
+    message = ctx.message
+    print("entrou no try")
+    attach = message.attachments[0]
+    await attach.save('file.csv')
+    first_line = False
+    if Path('file.csv').is_file():
+        with Path('file.csv').open() as csvfile:
+            rows = csv.reader(csvfile)
+            for row in rows:
+                if not first_line:
+                    first_line = True
+                    continue
+                timestamp = row[0]
+                nome = row[1]
+                discorduser = row[2]
+                titulo = row[7]
+                sinopse = row[8]
+                genero = row[9]
+                sistema = row[10]
+                minima = row[11]
+                print('\n'.join([timestamp, nome, discorduser, titulo, sinopse, genero, sistema, minima]))
+                async with client.pool.acquire() as connection:
+                    async with connection.transaction():
+                        await connection.execute(
+                                "INSERT INTO mesas "
+                                "VALUES ($1, $2, $3, $4, $5, $6, $7, $8) "
+                                "ON CONFLICT (timestamp) DO NOTHING",
+                                timestamp, nome, discorduser, titulo, sinopse, genero, sistema, minima)
+    else:
+        print('Não tá encontrando file.csv nessa merda de bagulho do caralho fdp')
+
+    print("finalizou try")
+    print("chegou no finally")
+    return
 
 
 # Event control commands

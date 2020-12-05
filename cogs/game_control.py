@@ -1,4 +1,3 @@
-import csv
 import discord
 
 from discord.utils import get
@@ -116,7 +115,7 @@ class GameControlCog(commands.Cog):
 
     @commands.command(aliases=["aluga_bot"])
     @commands.has_permissions(manage_channels=True, manage_roles=True)
-    async def rent_a_bot(self, ctx, bot_role_name):
+    async def rent_a_bot(self,ctx, bot_role_name):
         bot = bot_role_name
         guild = ctx.guild
         category_id = ctx.channel.category_id
@@ -142,41 +141,6 @@ class GameControlCog(commands.Cog):
                     await category.set_permissions(bot_role, send_messages=True, speak=True)
                     await ctx.send(f'{bot_role_name} recebeu permissões nesta mesa.')
 
-    # NEXT LEVEL COMMANDS - USE THOSE ABOVE THEM
-    @commands.command()
-    @commands.has_permissions(manage_channels=True)
-    async def grab_games(self, ctx):
-        message = ctx.message
-        print("entrou no try")
-        attach = message.attachments[0]
-        await attach.save('file.csv')
-        first_line = False
-        with open('../file.csv', 'r') as csvfile:
-            rows = csv.reader(csvfile)
-            for row in rows:
-                if not first_line:
-                    first_line = True
-                    continue
-                timestamp = row[0]
-                nome = row[1]
-                discorduser = row[2]
-                titulo = row[7]
-                sinopse = row[8]
-                genero = row[9]
-                sistema = row[10]
-                minima = row[11]
-                print('\n'.join([timestamp, nome, discorduser, titulo, sinopse, genero, sistema, minima]))
-                async with self.bot.pool.acquire() as connection:
-                    async with connection.transaction():
-                        await connection.execute(
-                                "INSERT INTO mesas "
-                                "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) "
-                                "ON CONFLICT (timestamp) DO NOTHING",
-                                timestamp, nome, discorduser, titulo, sinopse, genero, sistema, minima)
-
-        print("finalizou try")
-        print("chegou no finally")
-        return
 
     @commands.command()
     @commands.has_permissions(manage_channels=True, manage_roles=True)
